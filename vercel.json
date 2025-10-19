@@ -1,16 +1,26 @@
 {
   "version": 2,
-  "installCommand": "cd server && npm install && cd ../client && npm install",
-  "buildCommand": "cd client && npm run build",
-  "outputDirectory": "client/dist",
-  "rewrites": [
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "destination": "/server/server.js"
+      "src": "client/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "client/dist"
+      }
     },
     {
-      "source": "/(.*)",
-      "destination": "/client/dist/$1"
+      "src": "server/server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/server/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/client/dist/$1"
     }
   ]
 }
