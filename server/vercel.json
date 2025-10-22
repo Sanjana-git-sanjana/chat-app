@@ -1,20 +1,16 @@
-  {
-    "version": 2,
-    "builds": [
-        {
-            "src": "server.js",
-            "use": "@vercel/node",
-            "config": {
-                "includeFiles": [
-                    "dist/**"
-                ]
-            }
-        }
-    ],
-    "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "server.js"
-        }
-    ]
+{
+  "version": 2,
+  "builds": [
+    { "src": "vite.config.js", "use": "@vercel/static-build" }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "https://chat-app-1-4y5b.onrender.com/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
 }
