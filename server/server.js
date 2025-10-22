@@ -60,28 +60,109 @@
 
 
 
+// import express from "express";
+// import "dotenv/config";
+// import cors from "cors";
+// import http from "http";
+// import { connectDB } from "./lib/db.js";
+// import userRouter from "./routes/userRoutes.js";
+// import messageRouter from "./routes/messageRoutes.js";
+// import { Server } from "socket.io";
+
+// // create express app and http server
+// const app = express();
+// const server = http.createServer(app);
+
+// // initialise socket.io server
+// export const io = new Server(server, {
+//   cors: {
+//     origin: "*", // or specify your frontend vercel domain later
+//     methods: ["GET", "POST"],
+//   },
+// });
+
+// // online users
+// export const userSocketMap = {};
+
+// // socket.io connection
+// io.on("connection", (socket) => {
+//   const userId = socket.handshake.query.userId;
+//   console.log("User connected:", userId);
+
+//   if (userId) userSocketMap[userId] = socket.id;
+
+//   io.emit("getOnlineUsers", Object.keys(userSocketMap));
+
+//   socket.on("disconnect", () => {
+//     console.log("User disconnected:", userId);
+//     delete userSocketMap[userId];
+//     io.emit("getOnlineUsers", Object.keys(userSocketMap));
+//   });
+// });
+
+// // middleware setup
+// app.use(express.json({ limit: "4mb" }));
+// app.use(cors());
+
+// // API routes
+// app.use("/api/messages", messageRouter);
+// app.use("/api/auth", userRouter);
+
+// // test route
+// app.get("/api/status", (req, res) => res.send("Server is Live!"));
+
+// // connect database
+// await connectDB();
+
+// // start server
+// const PORT = process.env.PORT || 5000;
+// server.listen(PORT, () => console.log(`Server running on PORT: ${PORT}`));
+
+// export default server;
+
+
+// server.js
+
 import express from "express";
 import "dotenv/config";
 import cors from "cors";
 import http from "http";
 import { connectDB } from "./lib/db.js";
-import userRouter from "./routes/userRoutes.js";
-import messageRouter from "./routes/messageRoutes.js";
+import userRouter from "./routes/userRoutes.js"; // Auth & user routes
+import messageRouter from "./routes/messageRoutes.js"; // Message routes
 import { Server } from "socket.io";
 
 // create express app and http server
 const app = express();
 const server = http.createServer(app);
 
+// ✅ CORS setup
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173", // local dev
+      "https://chat-app-frontend-orcin-seven.vercel.app", // deployed frontend
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
+
+// parse JSON requests
+app.use(express.json({ limit: "4mb" }));
+
 // initialise socket.io server
 export const io = new Server(server, {
   cors: {
-    origin: "*", // or specify your frontend vercel domain later
+    origin: [
+      "http://localhost:5173",
+      "https://chat-app-frontend-orcin-seven.vercel.app",
+    ],
     methods: ["GET", "POST"],
   },
 });
 
-// online users
+// online users map
 export const userSocketMap = {};
 
 // socket.io connection
@@ -100,15 +181,11 @@ io.on("connection", (socket) => {
   });
 });
 
-// middleware setup
-app.use(express.json({ limit: "4mb" }));
-app.use(cors());
+// ✅ API routes
+app.use("/api/auth", userRouter); // signup/login
+app.use("/api/messages", messageRouter); // messages
 
-// API routes
-app.use("/api/messages", messageRouter);
-app.use("/api/auth", userRouter);
-
-// test route
+// ✅ Test route
 app.get("/api/status", (req, res) => res.send("Server is Live!"));
 
 // connect database
