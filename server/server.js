@@ -50,13 +50,13 @@
 
 // await connectDB()
 
-// // if (process.env.NODE_ENV === "production")
-     
+// // if (process.env.NODE_ENV === "production"){     
 
 // const PORT = process.env.PORT || 5000;
 // server.listen(PORT, () => console.log("Server is Running on PORT: " + PORT));
 
 // export default server;
+
 
 
 
@@ -68,23 +68,20 @@ import { connectDB } from "./lib/db.js";
 import userRouter from "./routes/userRoutes.js";
 import messageRouter from "./routes/messageRoutes.js";
 import { Server } from "socket.io";
-import path from "path";
-import { fileURLToPath } from "url";
-
-// Fix for ES module __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // create express app and http server
 const app = express();
 const server = http.createServer(app);
 
-// initialise socket.io
+// initialise socket.io server
 export const io = new Server(server, {
-  cors: { origin: "*" }
+  cors: {
+    origin: "*", // or specify your frontend vercel domain later
+    methods: ["GET", "POST"],
+  },
 });
 
-// online users map
+// online users
 export const userSocketMap = {};
 
 // socket.io connection
@@ -93,6 +90,7 @@ io.on("connection", (socket) => {
   console.log("User connected:", userId);
 
   if (userId) userSocketMap[userId] = socket.id;
+
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
   socket.on("disconnect", () => {
@@ -102,29 +100,22 @@ io.on("connection", (socket) => {
   });
 });
 
-// middleware
+// middleware setup
 app.use(express.json({ limit: "4mb" }));
 app.use(cors());
 
-// routes
+// API routes
 app.use("/api/messages", messageRouter);
 app.use("/api/auth", userRouter);
-app.get("/api/status", (req, res) => res.send("Server is Live"));
 
-// connect to database
+// test route
+app.get("/api/status", (req, res) => res.send("Server is Live!"));
+
+// connect database
 await connectDB();
 
-// serve frontend
-const clientPath = path.join(__dirname, "./client/dist");
-app.use(express.static(clientPath));
-
-// React Router fallback
-app.get("*", (req, res) => {
-  res.sendFile(path.join(clientPath, "index.html"));
-});
-
-// run the server
+// start server
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on PORT: ${PORT}`));
 
 export default server;
